@@ -74,19 +74,25 @@ exports.setDefaults = (defaults) => {
     };
 };
 exports.fetchUserByNameAndUsersCompany = (userName, services) => {
-    return services.fetchUsers().then(function(users) {
+    var promise1 = services.fetchUsers().then(function(users) {
         let user = users.find(({ name }) => name === userName);
         return new Promise(resolve => resolve(user));
     }).then((user) => {
         return services.fetchCompanyById(user.companyId).then(function(company){
             return new Promise(resolve => resolve({user,company}));
         });
-    }).then(function(obj){
-        return services.fetchStatus().then((status) => {
-            return new Promise(resolve => {
-                obj['status'] = status;
-                console.dir(obj);
-                resolve(obj);});
-        });
+    });
+
+    var promise2 = services.fetchStatus().then((status) => {
+        return new Promise(resolve => resolve({status}));
+    });
+
+    return Promise.all([promise1, promise2]).then(function(values) {
+        var object3 = {}; 
+        if(values.length==2){
+            object3 = {...values[0], ...values[1] }
+            //console.log('result is ',object3);
+        }
+        return new Promise(resolve => resolve(object3));
     });
 };
